@@ -239,9 +239,12 @@ public class EmbObjHandler {
 		if (this.iType != null) return;
 		if (this.iAbsValNode == null) {
 			if (isEmbeddedObject()) {
-				if (this.iRawType != CIMDataType.STRING_T) throw new SAXException(
-						"Embedded Object CIM-XML element's type must be string. " + this.iRawType
-								+ " is invalid!");
+				//if (this.iRawType != CIMDataType.STRING_T) {
+				if (this.iRawType.getType() != CIMDataType.STRING_T.getType()) {
+				    throw new SAXException("Embedded Object CIM-XML element's type must be string. " + this.iRawType
+                            + " is invalid!");
+				}
+						
 				if (this.iSession.strictEmbObjParsing()) {
 					/*
 					 * Here the assumption is that Object = CLASS, Instance =
