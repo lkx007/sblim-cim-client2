@@ -24,136 +24,71 @@
 
 package org.sblim.wbem.cimclient.sample;
 
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import org.sblim.wbem.cim.CIMArgument;
-import org.sblim.wbem.cim.CIMDataType;
-import org.sblim.wbem.cim.CIMException;
-import org.sblim.wbem.cim.CIMNameSpace;
-import org.sblim.wbem.cim.CIMObjectPath;
-import org.sblim.wbem.cim.CIMValue;
-import org.sblim.wbem.cim.UnsignedInt32;
-import org.sblim.wbem.client.CIMClient;
-import org.sblim.wbem.client.PasswordCredential;
-import org.sblim.wbem.client.UserPrincipal;
+import javax.cim.CIMArgument;
+import javax.cim.CIMDataType;
+import javax.cim.CIMObjectPath;
+import javax.wbem.client.WBEMClient;
 
 /**
  * @author thschaef
  */
 public class InvokeMethodSample {
 
-	private void test() {
-		try {
-						
-			String cimAgentAddress = "https://127.0.0.1:5989";
-			String namespace       = "root/ibm";
-			String user            = "youruser";
-			String pw              = "yourpawo";
-			
-			System.out.println("===============================================");	
-			System.out.println("= Starting: "+this.getClass().getName());
-			System.out.println("= CIM Agent: "+cimAgentAddress);
-			System.out.println("= Namespace: "+namespace);
-			System.out.println("===============================================");	
-			System.out.println();
-	
-			// *****************************
-			// 1. Create user credentials
-			// *****************************
-			UserPrincipal userPr = new UserPrincipal(user);
-			PasswordCredential pwCred = new PasswordCredential(pw.toCharArray());			
+    private void test() {
+        try {
 
-			// *****************************
-			// 2. Set NameSpace
-			// - URL is set like: http(s)://<IP>:Port
-			// - Namespace does not need to be specified in COPs if set in this constuctor
-			// - There is no server authentication being done. Thus: No need for a truststore
-			// *****************************			
-			CIMNameSpace ns = new CIMNameSpace(cimAgentAddress,namespace);
+            String cimAgentAddress = "https://192.168.2.36:5989";
+            String nameSpace = "cimv2";
+            String user = "admin";
+            String pw = "password123";
 
-			// *****************************
-			// 3. Create CIM Client
-			// *****************************		    				
-			CIMClient cimClient = new CIMClient(ns,userPr,pwCred);
-			
-			// *******************************************************
-			// 4. Obtain instance COP of CIM_AccountManagementService
-			// *******************************************************	
-			CIMObjectPath amsClassCOp = new CIMObjectPath("CIM_AccountManagementService");	
-			
-			System.out.println(" Obtain instance of CIM_AccountManagementService");					
-			Enumeration amsEnum = cimClient.enumerateInstanceNames(amsClassCOp);			
-			
-			CIMObjectPath amsCOP = null;
-			while (amsEnum.hasMoreElements()) {
-				amsCOP = (CIMObjectPath) amsEnum.nextElement();
-				break;
-			}
-			
-			// *******************************************************
-			// 5. Invoke method CIM_AccountManagementService.CreateAccount()
-			// *******************************************************	
-			
-			System.out.println(" Prepare method invokation...");
-			// INPUT Parameter
-			Vector inputVec = new Vector();
-			CIMArgument userID       = new CIMArgument();
-			CIMArgument password     = new CIMArgument();
-			CIMArgument globalRole   = new CIMArgument();
-	
-	        userID.setName("UserID");
-			userID.setValue(new CIMValue("dummy_ID2", CIMDataType.getPredefinedType(CIMDataType.STRING)));
-	
-			password.setName("Password");
-			password.setValue(new CIMValue("dummy", CIMDataType.getPredefinedType(CIMDataType.STRING)));
-	
-			globalRole.setName("GlobalRole");
-			globalRole.setValue(new CIMValue("Monitor", CIMDataType.getPredefinedType(CIMDataType.STRING)));
-			
-			System.out.println(" Input parameters > UserID: "+userID.getValue()+" Password: "+password.getValue()+" GlobalRole: "+globalRole.getValue()+")");
-	
-			inputVec.add(userID);
-			inputVec.add(password);
-			inputVec.add(globalRole);			
-	
-	        // OUTPUT Parameter
-			// Need to create an array of exactly the size of the expected amount of returned values
-			Vector outputVec = new Vector();
-	
-			System.out.println(" Invoking method > CIM_AccountManagementService.CreateAccount("+userID.getValue()+","+password.getValue()+","+globalRole.getValue());
-			CIMValue result = cimClient.invokeMethod(amsCOP,"CreateAccount",inputVec,outputVec);
-	
-			if (((UnsignedInt32)result.getValue()).intValue() == 0) {
-				if (outputVec.size() == 1) {
-					CIMValue newAccountV = (CIMValue) outputVec.elementAt(0);
-						
-					System.out.println("  >> Successfully created new account <<");
-					System.out.println("  COP :"+ newAccountV.getValue().toString());
-				} else {
-					System.out.println("  >> F A I L E D <<");
-				    System.out.println("  Number Output Parameters: "+outputVec.size());	
-				}
-			} else {
-				System.out.println("  >> F A I L E D <<");
-			    System.out.println("  Return Code (RC): "+result.getValue().toString());				
-			}	
-			
-			System.out.println("============= DONE ================");
-	
-			cimClient.close();
-	
-		} catch (CIMException e) {			
-			e.printStackTrace();
-		}
-	
-	}
-	
-	public static void main(String[] args) {
-		
-		InvokeMethodSample iss = new InvokeMethodSample();
-		iss.test();
-		
-		
-	}
+            System.out.println("===============================================");
+            System.out.println("= Starting: " + this.getClass().getName());
+            System.out.println("= CIM Agent: " + cimAgentAddress);
+            System.out.println("= Namespace: " + nameSpace);
+            System.out.println("===============================================");
+            System.out.println();
+
+            URL pWbemUrl = new URL(cimAgentAddress);
+            WBEMClient cimClient = SimpleTestClient.connect(pWbemUrl, user, pw);
+
+            // SendTestIndication does not use any in/out parameters
+            CIMArgument<?>[] input = new CIMArgument[1];
+            CIMArgument<?>[] output = new CIMArgument[0];
+
+            input[0] = new CIMArgument<String>("CLASSNAME", CIMDataType.STRING_T, "sss");
+
+            // This will trigger a TestIndication that is caught by our
+            // listener
+            Object obj = cimClient.invokeMethod(
+                    new CIMObjectPath(null, null, null, nameSpace, "CIM_AccountManagementService", null),
+                    "CreateAccount", input, output);
+
+            if (obj.toString().equals("0")) {
+                System.out.println("Indication generated successfully, waiting for delivery...");
+                Thread.sleep(5000);
+            } else {
+                System.out.println("Indication not generated successfully!");
+            }
+
+            System.out.println("Sample completed.");
+
+            cimClient.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public static void main(String[] args) {
+
+        InvokeMethodSample iss = new InvokeMethodSample();
+        iss.test();
+
+    }
 }
